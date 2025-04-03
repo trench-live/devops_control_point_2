@@ -1,0 +1,29 @@
+name: Run Tests
+
+on:
+  workflow_call:
+
+jobs:
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run unit tests
+        run: |
+          echo "Running unit tests..."
+
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+
+  fuzz:
+    name: Fuzzing Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run fuzzing tests
+        run: |
+          echo "Running fuzzing tests..."
