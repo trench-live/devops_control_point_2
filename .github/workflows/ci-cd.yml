@@ -1,1 +1,26 @@
+name: CI/CD Pipeline
 
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to test (default: release)"
+        required: false
+        default: "release"
+        type: string
+
+  pull_request:
+    types: [closed]
+    branches:
+      - release
+
+env:
+  TESTS_WORKFLOW_PATH: trench-live/devops_control_point_2/.github/workflows/test.yml@release
+
+jobs:
+  invoke_tests:
+    name: "Run Test Pipeline"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute Test Suite
+        uses: ${{ env.TESTS_WORKFLOW_PATH }}
