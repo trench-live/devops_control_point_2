@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run Tests (Unit, Smoke, Fuzz)
 
 on:
   workflow_call:
@@ -8,22 +8,32 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Run unit tests
-        run: |
-          echo "Running unit tests..."
+      - run: echo "Running unit tests (заглушка)..."
 
   smoke:
     name: Smoke Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Run smoke tests
-        run: |
-          echo "Running smoke tests..."
+      - run: echo "Running smoke tests (заглушка)..."
 
   fuzz:
     name: Fuzzing Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Run fuzzing tests
-        run: |
-          echo "Running fuzzing tests..."
+      - run: echo "Running fuzzing tests (заглушка)..."
+
+  add_label:
+    name: Add test-passed label
+    runs-on: ubuntu-latest
+    needs: [unit, smoke, fuzz]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['test-passed']
+            })
