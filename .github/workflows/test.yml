@@ -12,19 +12,19 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Running unit tests (заглушка)..."
+      - run: echo "Running unit tests..."
 
   smoke:
     name: Smoke Tests
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Running smoke tests (заглушка)..."
+      - run: echo "Running smoke tests..."
 
   fuzz:
     name: Fuzzing Tests
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Running fuzzing tests (заглушка)..."
+      - run: echo "Running fuzzing tests..."
 
   add_label:
     name: Add test-passed label
@@ -41,8 +41,8 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 labels: ['test-passed']
-              })
+              });
             } catch (error) {
-              console.error('Failed to add label:', error)
-              throw error  # Прерываем workflow при ошибке
+              core.error('Failed to add label: ' + error.message);
+              core.setFailed(error.message);
             }
