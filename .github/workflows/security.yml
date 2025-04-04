@@ -11,17 +11,17 @@ permissions:
 jobs:
   antivirus:
     runs-on: ubuntu-latest
-    name: Antivirus Scan (ClamAV)
+    name: Security Scan (Trivy)
     steps:
       - uses: actions/checkout@v4
-      - name: Setup ClamAV
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y clamav clamav-daemon
-          sudo freshclam
-      - name: Scan repository
-        run: |
-          clamscan -r --bell --no-summary ./ || true  # ignores error for testing
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@0.14.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          exit-code: '0'
+          format: 'table'
+          severity: 'CRITICAL'
 
   security_linter:
     runs-on: ubuntu-latest
