@@ -10,14 +10,13 @@ jobs:
     if: github.event.pull_request.merged != true
     runs-on: ubuntu-latest
     steps:
-      - name: Cancel non-merge runs
-        run: exit 1
+      - run: exit 1
 
   run_tests:
     needs: check_merge
-    uses: ${{ fromJSON(vars.paths).workflows.tests }}
+    uses: trench-live/devops_control_point_2/.github/workflows/test.yml@release
 
   handle_results:
     needs: run_tests
-    uses: ${{ fromJSON(vars.paths).workflows.result_handler }}
+    uses: trench-live/devops_control_point_2/.github/workflows/test-result-handler.yml@release
     secrets: inherit
