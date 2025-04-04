@@ -1,17 +1,23 @@
 name: CI/CD Pipeline
 
 on:
-  workflow_dispatch:
   pull_request:
-    types: [closed]
     branches: [release]
+    types: [closed]
 
 jobs:
+  check_merge:
+    if: github.event.pull_request.merged != true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel non-merge runs
+        run: exit 1
+
   run_tests:
+    needs: check_merge
     uses: ${{ fromJSON(vars.paths).workflows.tests }}
 
   handle_results:
-    uses: ${{ fromJSON(vars.paths).workflows.result_handler }}
     needs: run_tests
-    if: always()
+    uses: ${{ fromJSON(vars.paths).workflows.result_handler }}
     secrets: inherit
