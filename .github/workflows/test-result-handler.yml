@@ -1,8 +1,0 @@
-name: Test Result Handler
-on: workflow_call
-
-jobs:
-  report_status:
-    uses: trench-live/devops_control_point_2/.github/workflows/test-reporting.yml@release
-    with:
-      test_status: ${{ needs.run_tests.result }}

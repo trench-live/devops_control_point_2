@@ -1,20 +1,14 @@
 name: CI/CD Pipeline
 on:
+  workflow_dispatch:
   pull_request:
-    branches: [release]
     types: [closed]
+    branches:
+      - release
+
+env:
+  WORKFLOW_PATH: trench-live/devops_control_point_2/.github/workflows/test.yml@release
 
 jobs:
-  check_merge:
-    if: github.event.pull_request.merged != true
-    runs-on: ubuntu-latest
-    steps: [ - run: exit 1 ]
-
   run_tests:
-    needs: check_merge
-    uses: trench-live/devops_control_point_2/.github/workflows/test.yml@release
-
-  handle_results:
-    needs: run_tests
-    uses: trench-live/devops_control_point_2/.github/workflows/test-result-handler.yml@release
-    secrets: inherit
+    uses: ${{ env.WORKFLOW_PATH }}
