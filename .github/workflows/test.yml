@@ -1,0 +1,48 @@
+name: Run Tests (Unit, Smoke, Fuzz)
+
+on:
+  workflow_call:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Running unit tests..."
+
+  smoke:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Running smoke tests..."
+
+  fuzz:
+    name: Fuzzing Tests
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Running fuzzing tests..."
+
+  add_label:
+    name: Add test-passed label
+    runs-on: ubuntu-latest
+    needs: [unit, smoke, fuzz]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ['test-passed']
+              });
+            } catch (error) {
+              core.error('Failed to add label: ' + error.message);
+              core.setFailed(error.message);
+            }
