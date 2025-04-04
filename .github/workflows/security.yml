@@ -39,10 +39,10 @@ jobs:
 
   secrets_check:
     runs-on: ubuntu-latest
-    name: Secrets Detection (Gitleaks)
+    name: Secrets Detection
     steps:
       - uses: actions/checkout@v4
-      - name: Run Gitleaks
+      - name: Run Gitleaks (Ultra-Light)
         uses: gitleaks/gitleaks-action@v3
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
