@@ -11,11 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v6
-        env:
-          SCRIPT_PATH: ${{ fromJSON(vars.paths).scripts.reporter }}
         with:
           script: |
-            const { report } = require('${{ env.SCRIPT_PATH }}');
+            const { report } = require('./.github/scripts/test-reporter.js');
             await report({
               github: github,
               context: context,

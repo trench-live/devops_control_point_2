@@ -1,5 +1,4 @@
 name: CI/CD Pipeline
-
 on:
   pull_request:
     branches: [release]
@@ -9,8 +8,7 @@ jobs:
   check_merge:
     if: github.event.pull_request.merged != true
     runs-on: ubuntu-latest
-    steps:
-      - run: exit 1
+    steps: [ - run: exit 1 ]
 
   run_tests:
     needs: check_merge
