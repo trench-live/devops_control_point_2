@@ -1,0 +1,23 @@
+name: Test Reporting
+
+on: workflow_call
+inputs:
+  test_status:
+    required: true
+    type: string
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        env:
+          SCRIPT_PATH: ${{ fromJSON(vars.paths).scripts.reporter }}
+        with:
+          script: |
+            const { report } = require('${{ env.SCRIPT_PATH }}');
+            await report({
+              github: github,
+              context: context,
+              status: '${{ inputs.test_status }}'
+            });
