@@ -3,10 +3,6 @@ name: Run Tests (Unit, Smoke, Fuzz)
 on:
   workflow_call:
 
-permissions:
-  issues: write
-  pull-requests: write
-
 jobs:
   unit:
     name: Unit Tests
