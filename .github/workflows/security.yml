@@ -1,0 +1,69 @@
+name: Security Checks
+
+on:
+  workflow_call:
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  antivirus:
+    runs-on: ubuntu-latest
+    name: Antivirus Scan (ClamAV)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup ClamAV
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clamav clamav-daemon
+          sudo freshclam
+      - name: Scan repository
+        run: |
+          clamscan -r --bell --infected ./
+
+  security_linter:
+    runs-on: ubuntu-latest
+    name: Security Linter (Bandit)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Install Bandit
+        run: pip install bandit
+      - name: Run Bandit scan
+        run: bandit -r . -ll
+
+  secrets_check:
+    runs-on: ubuntu-latest
+    name: Secrets Detection (Gitleaks)
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .gitleaks.toml
+
+  add_sec_label:
+    name: Add sec-passed label
+    runs-on: ubuntu-latest
+    needs: [antivirus, security_linter, secrets_check]
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ['sec-passed']
+              })
+            } catch (error) {
+              core.error('Failed to add label: ' + error.message)
+              core.setFailed(error.message)
+            }
