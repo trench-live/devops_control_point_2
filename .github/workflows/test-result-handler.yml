@@ -1,11 +1,16 @@
 name: Test Result Handler
+
 on: workflow_call
 
 jobs:
   process:
     runs-on: ubuntu-latest
     steps:
-      - name: Report status
-        uses: ${{ fromJSON(vars.paths).workflows.reporting }}
+      - name: Set status
+        id: set_status
+        run: echo "status=${{ needs.run_tests.result }}" >> $GITHUB_OUTPUT
+
+      - name: Report
+        uses: trench-live/devops_control_point_2/.github/workflows/test-reporting.yml@release
         with:
-          test_status: ${{ needs.run_tests.result }}
+          test_status: ${{ steps.set_status.outputs.status }}
