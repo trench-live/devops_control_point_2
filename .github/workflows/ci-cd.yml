@@ -7,10 +7,7 @@ on:
     branches:
       - release
 
-env:
-  TESTS_WORKFLOW_PATH: trench-live/devops_control_point_2/.github/workflows/test.yml@release
-
 jobs:
   tests:
     name: (TST) Run Tests
-    uses: ${{ env.TESTS_WORKFLOW_PATH }}
+    uses: trench-live/devops_control_point_2/.github/workflows/test.yml@release
