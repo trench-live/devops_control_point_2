@@ -4,10 +4,14 @@ on:
   workflow_dispatch:
   pull_request:
     types: [closed]
-    branches:
-      - release
+    branches: [release]
 
 jobs:
-  tests:
-    name: (TST) Run Tests
-    uses: trench-live/devops_control_point_2/.github/workflows/test.yml@release
+  run_tests:
+    uses: ${{ fromJSON(vars.paths).workflows.tests }}
+
+  handle_results:
+    uses: ${{ fromJSON(vars.paths).workflows.result_handler }}
+    needs: run_tests
+    if: always()
+    secrets: inherit

@@ -1,0 +1,16 @@
+name: Test Result Handler
+
+on: workflow_call
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine status
+        run: |
+          echo "STATUS=${{ needs.run_tests.result }}" >> $GITHUB_ENV
+
+      - name: Report
+        uses: ${{ fromJSON(vars.paths).workflows.reporting }}
+        with:
+          test_status: ${{ env.STATUS }}
