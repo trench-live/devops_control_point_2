@@ -9,3 +9,6 @@ on:
 jobs:
   run_tests:
     uses: trench-live/devops_control_point_2/.github/workflows/test.yml@release
+
+  security:
+    uses: trench-live/devops_control_point_2/.github/workflows/security.yml@release
