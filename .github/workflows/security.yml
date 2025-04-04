@@ -39,11 +39,11 @@ jobs:
 
   secrets_check:
     runs-on: ubuntu-latest
-    name: Secrets Detection
+    name: TruffleHog Scan
     steps:
       - uses: actions/checkout@v4
-      - name: Run Gitleaks (Ultra-Light)
-        uses: gitleaks/gitleaks-action@v3
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
