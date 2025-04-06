@@ -1,51 +1,84 @@
 import os
 import sys
+import re
 from datetime import datetime
-
-# Configure from env variables
-VERSION_FILE = os.getenv('VERSION_FILE', '../version_info/version')
-VERSION_LOG_FILE = os.getenv('VERSION_LOG_FILE', '../version_info/version_log')
+from config import VERSION_FILE, VERSION_LOG_FILE
 
 def read_version():
     try:
-        with open(VERSION_FILE, 'r') as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        print(f"Creating new version file at {VERSION_FILE}")
-        with open(VERSION_FILE, 'w') as f:
-            f.write("0.1.0")
-        return "0.1.0"
+        if os.path.exists(VERSION_FILE):
+            with open(VERSION_FILE, "r") as f:
+                return f.read().strip()
+        else:
+            return None
+    except IOError as e:
+        print(f"Error reading {VERSION_FILE}: {e}")
+        return None
 
 def write_version(version):
-    with open(VERSION_FILE, 'w') as f:
-        f.write(version)
+    try:
+        with open(VERSION_FILE, "w") as f:
+            f.write(version)
+    except IOError as e:
+        print(f"Error writing to {VERSION_FILE}: {e}")
+        raise
 
-def log_version(old_ver, new_ver, update_type):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"[{timestamp}] {old_ver} -> {new_ver} ({update_type})\n"
-    with open(VERSION_LOG_FILE, 'a') as f:
-        f.write(log_entry)
+def write_log(old_version, new_version, update_type):
+    try:
+        with open(VERSION_LOG_FILE, "a") as log_file:
+            timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S.%f")[:-3]
+            log_message = f"[{timestamp}] {update_type} update: {old_version} -> {new_version}\n"
+            log_file.write(log_message)
+    except IOError as e:
+        print(f"Error writing to {VERSION_LOG_FILE}: {e}")
+        raise
 
-def bump_version(current, update_type):
-    major, minor, patch = map(int, current.split('.'))
-    if update_type == "minor":
+def validate_version(version):
+    pattern = r"^\d+\.\d+\.\d+$"
+    return re.match(pattern, version) is not None
+
+def increment_version(version, update_type):
+    major, minor, patch = map(int, version.split('.'))
+
+    if update_type == "major":
+        major += 1
+        minor = 0
+        patch = 0
+    elif update_type == "minor":
         minor += 1
         patch = 0
     elif update_type == "patch":
         patch += 1
+
     return f"{major}.{minor}.{patch}"
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] not in ["minor", "patch"]:
-        print("Usage: python version_updater.py [minor|patch]")
+def parse_args():
+    if len(sys.argv) != 2 or sys.argv[1] not in ["major", "minor", "patch"]:
+        print("Error: incorrect parameter (major, minor or patch).")
         sys.exit(1)
+    return sys.argv[1]
 
-    update_type = sys.argv[1]
+def main():
+    update_type = parse_args()
+
+    if not os.path.exists(VERSION_FILE):
+        print(f"File {VERSION_FILE} not found, creating new one with version 1.0.0.")
+        write_version("1.0.0")
+
     current_version = read_version()
-    new_version = bump_version(current_version, update_type)
+    if current_version is None:
+        print("Error: couldn't read last version.")
+        return
 
+    if not validate_version(current_version):
+        print(f"Wrong version format in file {VERSION_FILE}. Required format 0.0.0")
+        return
+
+    new_version = increment_version(current_version, update_type)
     write_version(new_version)
-    log_version(current_version, new_version, update_type)
+    write_log(current_version, new_version, update_type)
 
-    print(f"Version updated: {current_version} → {new_version}")
-    print(f"::set-output name=NEW_VERSION::{new_version}")
+    print(f"Version updated from {current_version} to {new_version}.")
+
+if __name__ == "__main__":
+    main()

@@ -2,66 +2,40 @@ name: Version Update
 
 on:
   workflow_call:
-    inputs:
-      version_file_path:
-        description: 'Path to version file'
-        type: string
-        required: false
-        default: 'version_info/version'
-    secrets:
-      workflow_token:
-        description: 'GitHub token'
-        required: true
-
-permissions:
-  contents: write
-  pull-requests: write
 
 jobs:
-  update_version:
+  update-version:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.workflow_token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine update type
-        id: bump_type
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Determine branch type
+        id: branch_type
         run: |
-          if [[ "${{ github.ref }}" == refs/heads/feature/* ]]; then
-            echo "::set-output name=type::minor"
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          if [[ "$BRANCH_NAME" == hotfix/* ]]; then
+            echo "patch"
           else
-            echo "::set-output name=type::patch"
-          fi
+            echo "minor"
+          fi >> $GITHUB_OUTPUT
 
-      - name: Update version
-        id: version_update
-        env:
-          VERSION_FILE: ${{ inputs.version_file_path }}
-        run: |
-          mkdir -p $(dirname "$VERSION_FILE")
-          [ -f "$VERSION_FILE" ] || echo "0.1.0" > "$VERSION_FILE"
-          
-          current=$(cat "$VERSION_FILE")
-          IFS='.' read -r major minor patch <<< "$current"
-          
-          if [[ "${{ steps.bump_type.outputs.type }}" == "minor" ]]; then
-            minor=$((minor + 1))
-            patch=0
-          else
-            patch=$((patch + 1))
-          fi
-          
-          new_version="$major.$minor.$patch"
-          echo "$new_version" > "$VERSION_FILE"
-          echo "::set-output name=new_version::$new_version"
+      - name: Run version update script
+        run: python version_update.py ${{ steps.branch_type.outputs.version_type }}
 
-      - name: Commit changes
+      - name: Commit and push version changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add "${{ inputs.version_file_path }}"
-          git commit -m "[${{ steps.version_update.outputs.new_version }}] Version update"
-          git tag -a "v${{ steps.version_update.outputs.new_version }}" -m "Version ${{ steps.version_update.outputs.new_version }}"
-          git push origin HEAD --tags
+          git add .
+          git commit -m "Auto-update version [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
