@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  SCRIPT: trench-live/devops_control_point_2/.github/workflows/scripts/version_up.py
+  SCRIPT: .github/workflows/scripts/version_up.py
 
 jobs:
   update-version:
@@ -26,9 +26,13 @@ jobs:
       - name: Update version
         run: |
           OLD_VER=$(head -n 1 version_info/version)
-
+          
           python ${{ env.SCRIPT }} ${{ steps.branch.outputs.TYPE }}
+          
           NEW_VER=$(head -n 1 version_info/version)
-
+          
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
           git add version_info/version version_info/version_log
           git commit -m "[$NEW_VER] <- [$OLD_VER] ${{ steps.branch.outputs.TYPE }} up"
+          git push
