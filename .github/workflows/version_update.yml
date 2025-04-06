@@ -5,14 +5,22 @@ on:
     inputs:
       version_file_path:
         description: 'Path to version file'
+        type: string
         required: false
         default: 'version_info/version'
       version_log_path:
         description: 'Path to version log file'
+        type: string
         required: false
         default: 'version_info/version_log'
+      branch_type:
+        description: 'Override branch type'
+        type: string
+        required: false
+        default: ''
     secrets:
       workflow_token:
+        description: 'GitHub token for permissions'
         required: true
 
 permissions:
@@ -33,10 +41,14 @@ jobs:
       - name: Determine update type
         id: bump_type
         run: |
-          if [[ $GITHUB_REF == refs/heads/feature/* ]]; then
+          if [[ "${{ inputs.branch_type }}" != "" ]]; then
+            echo "${{ inputs.branch_type }}"
+          elif [[ $GITHUB_REF == refs/heads/feature/* ]]; then
             echo "minor"
           elif [[ $GITHUB_REF == refs/heads/hotfix/* ]]; then
             echo "patch"
+          else
+            echo "patch"  # default fallback
           fi >> $GITHUB_OUTPUT
 
       - name: Run version update
@@ -45,14 +57,18 @@ jobs:
           VERSION_FILE: ${{ inputs.version_file_path }}
           VERSION_LOG_FILE: ${{ inputs.version_log_path }}
         run: |
+          mkdir -p $(dirname "$VERSION_FILE")
+          [ -f "$VERSION_FILE" ] || echo "0.1.0" > "$VERSION_FILE"
+          [ -f "$VERSION_LOG_FILE" ] || touch "$VERSION_LOG_FILE"
+          
           python "$GITHUB_WORKSPACE/.github/version_updater.py" "${{ steps.bump_type.outputs.result }}"
-          echo "NEW_VERSION=$(cat ${{ inputs.version_file_path }})" >> $GITHUB_OUTPUT
+          echo "NEW_VERSION=$(cat $VERSION_FILE)" >> $GITHUB_OUTPUT
 
-      - name: Commit version changes
+      - name: Commit changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git add ${{ inputs.version_file_path }} ${{ inputs.version_log_path }}
+          git add "${{ inputs.version_file_path }}" "${{ inputs.version_log_path }}"
           git commit -m "[$(cat ${{ inputs.version_file_path }})] Version update"
           git tag -a "v$(cat ${{ inputs.version_file_path }})" -m "Version $(cat ${{ inputs.version_file_path }})"
           git push origin HEAD --tags
@@ -66,5 +82,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: ['v${{ steps.version_update.outputs.NEW_VERSION }}']
+              labels: [`v${{ steps.version_update.outputs.NEW_VERSION }}`]
             })
