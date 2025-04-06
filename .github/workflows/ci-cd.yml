@@ -22,4 +22,4 @@ jobs:
     needs: security
     uses: trench-live/devops_control_point_2/.github/workflows/version_update.yml@release
     secrets:
-      github_token: ${{ secrets.GITHUB_TOKEN }}
+      workflow_token: ${{ secrets.GITHUB_TOKEN }}
