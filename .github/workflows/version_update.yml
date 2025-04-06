@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 env:
-  SCRIPT: .github/workflows/scripts/version_up.py
+  SCRIPT: .github/workflows/scripts/version_updater.py
 
 jobs:
   update-version:
