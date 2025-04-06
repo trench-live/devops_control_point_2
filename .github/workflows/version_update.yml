@@ -4,47 +4,31 @@ on:
   workflow_call:
 
 env:
-  VERSION_FILE_PATH: trench-live/devops_control_point_2/.github/version_info/version
-  VERSION_UP_SCRIPT: trench-live/devops_control_point_2/.github/workflows/scripts/version_up.py
+  SCRIPT: trench-live/devops_control_point_2/.github/workflows/scripts/version_up.py
 
 jobs:
-  update:
+  update-version:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
+      - name: Detect branch type
+        id: branch
+        run: |
+          if [[ "${{ github.ref_name }}" == feature* ]]; then
+            echo "TYPE=minor" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == hotfix* ]]; then
+            echo "TYPE=patch" >> $GITHUB_OUTPUT
+          fi
+
       - name: Update version
         run: |
-          # Determining update type
-          if [[ "${{ github.ref_name }}" == feature* ]]; then
-            TYPE="minor"
-          elif [[ "${{ github.ref_name }}" == hotfix* ]]; then
-            TYPE="patch"
-          else
-            echo "⚠️ Неизвестный тип ветки - обновление не выполнено"
-            exit 0
-          fi
+          OLD_VER=$(head -n 1 version_info/version)
 
-          # Updating version
-          OLD_VER=$(python ${{ env.SCRIPT }} ${{ env.VERSION_FILE }} get)
-          python ${{ env.SCRIPT }} ${{ env.VERSION_FILE }} $TYPE
-          NEW_VER=$(python ${{ env.SCRIPT }} ${{ env.VERSION_FILE }} get)
+          python ${{ env.SCRIPT }} ${{ steps.branch.outputs.TYPE }}
+          NEW_VER=$(head -n 1 version_info/version)
 
-          # Commit changes
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add ${{ env.VERSION_FILE }}
-          git commit -m "[$NEW_VER] <- [$OLD_VER] $TYPE up"
-          git push
-
-          # Adding label to PR
-          if [[ "${{ github.event.pull_request }}" != "" ]]; then
-            curl -sS -X POST \
-              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/${{ github.repository }}/labels" \
-              -d '{"name":"v$NEW_VER", "color":"1E90FF"}'
-          fi
+          git add version_info/version version_info/version_log
+          git commit -m "[$NEW_VER] <- [$OLD_VER] ${{ steps.branch.outputs.TYPE }} up"
