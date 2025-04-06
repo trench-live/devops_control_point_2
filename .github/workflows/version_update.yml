@@ -12,7 +12,7 @@ on:
         required: false
         default: 'version_info/version_log'
     secrets:
-      github_token:
+      workflow_token:
         required: true
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.github_token }}
+          token: ${{ secrets.workflow_token }}
 
       - name: Determine update type
         id: bump_type
