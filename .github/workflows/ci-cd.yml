@@ -21,3 +21,4 @@ jobs:
   version_update:
     needs: security
     uses: trench-live/devops_control_point_2/.github/workflows/version_update.yml@release
+    secrets: inherit
