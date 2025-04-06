@@ -2,40 +2,52 @@ name: Version Update
 
 on:
   workflow_call:
+    outputs:
+      version: ${{ steps.update.outputs.new_version }}
+
+env:
+  VERSION_FILE_PATH: trench-live/devops_control_point_2/.github/version_info/version
+  VERSION_UP_SCRIPT: trench-live/devops_control_point_2/.github/workflows/scripts/version_up.py
 
 jobs:
-  update-version:
+  update:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-
-      - name: Determine branch type
-        id: branch_type
+      - name: Update version
+        id: update
         run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          if [[ "$BRANCH_NAME" == hotfix/* ]]; then
-            echo "patch"
-          else
-            echo "minor"
-          fi >> $GITHUB_OUTPUT
+          # Определяем тип обновления
+          if [[ "${{ github.ref_name }}" == feature* ]]; then
+            TYPE="minor"
+          elif [[ "${{ github.ref_name }}" == hotfix* ]]; then
+            TYPE="patch"
+          fi
 
-      - name: Run version update script
-        run: python version_update.py ${{ steps.branch_type.outputs.version_type }}
+          # Получаем и обновляем версию
+          OLD=$(python ${{ env.SCRIPT }} ${{ env.VERSION_FILE }} get)
+          python ${{ env.SCRIPT }} ${{ env.VERSION_FILE }} $TYPE
+          NEW=$(python ${{ env.SCRIPT }} ${{ env.VERSION_FILE }} get)
 
-      - name: Commit and push version changes
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add .
-          git commit -m "Auto-update version [skip ci]"
-          git push origin HEAD:${{ github.ref_name }}
+          # Коммит изменений
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add ${{ env.VERSION_FILE }}
+          git commit -m "[$NEW] <- [$OLD] $TYPE up"
+          git push
+
+          # Создаем лейбл (только для PR)
+          if [ "${{ github.event.pull_request }}" != "" ]; then
+            curl -sS -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/labels" \
+              -d '{"name":"v$NEW", "color":"1E90FF"}'
+          fi
+
+          # Возвращаем новую версию
+          echo "new_version=$NEW" >> $GITHUB_OUTPUT
