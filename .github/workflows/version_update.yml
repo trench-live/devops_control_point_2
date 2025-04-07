@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  #
 
       - name: Parse branch name
         id: parse-data
@@ -30,11 +32,14 @@ jobs:
         id: parse-data
         uses: tj-actions/branch-names@v8
 
-      - name: Сheckout on [${{env.RELEASE_BRACH}}]
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+          fetch-depth: 0
 
       - name: Validate branch (feature/hotfix)
-        id: validate_branch
+        id: validate-branch
         if: |
           contains(steps.parse-data.outputs.current_branch, 'feature') || 
           contains(steps.parse-data.outputs.current_branch, 'hotfix')
@@ -42,29 +47,31 @@ jobs:
 
       - name: Run minor version update script
         id: update-minor-version
-        if: |
-          contains(steps.parse-data.outputs.current_branch, 'feature')
+        if: contains(steps.parse-data.outputs.current_branch, 'feature')
         run: |
-          echo "python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}"
-          python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}
+          echo "Running: python ${{ env.VERSION_UP }} ${{ env.MINOR }} ${{ env.NAME_VERSION_FILE }}"
+          python ${{ env.VERSION_UP }} ${{ env.MINOR }} ${{ env.NAME_VERSION_FILE }}
 
       - name: Run patch version update script
         id: update-patch-version
-        if: |
-          contains(steps.parse-data.outputs.currecint_branch, 'hotfix')
+        if: contains(steps.parse-data.outputs.current_branch, 'hotfix')
         run: |
-          python ${VERSION_UP} ${PATCH} ${NAME_VERSION_FILE}
+          echo "Running: python ${{ env.VERSION_UP }} ${{ env.PATCH }} ${{ env.NAME_VERSION_FILE }}"
+          python ${{ env.VERSION_UP }} ${{ env.PATCH }} ${{ env.NAME_VERSION_FILE }}
 
       - name: Set output tag
         id: output-tag
-        run: TAG_MSG=$(python ${{env.VERSION_UP}} ${{env.NAME_VERSION_FILE}} version)
+        run: |
+          TAG_MSG=$(python ${{ env.VERSION_UP }} ${{ env.NAME_VERSION_FILE }} version)
+          echo "TAG_MSG=$TAG_MSG" >> $GITHUB_OUTPUT
 
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
+
       - name: Commit and push changes
         run: |
           git add .
           git commit -m "Update version"
-          git push origin ${RELEASE_BRANCH}
+          git push origin ${{ env.RELEASE_BRANCH }}
