@@ -7,7 +7,7 @@ env:
   RELEASE_BRANCH: release
   MINOR: minor
   PATCH: patch
-  VERSION_UP: .github/workflows/scripts/version_update.py
+  VERSION_UP: ${{ github.workspace }}/.github/workflows/scripts/version_update.py
 
 jobs:
   validate_branch:
