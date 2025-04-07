@@ -10,55 +10,50 @@ env:
   VERSION_UP: ${{ github.workspace }}/.github/workflows/scripts/version_update.py
 
 jobs:
-  validate_branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Parse branch name
-        id: parse-data
-        uses: tj-actions/branch-names@v8
-
-      - name: Сheckout on [${{env.RELEASE_BRANCH}}]
-        uses: actions/checkout@v3
-
   update-version:
     runs-on: ubuntu-latest
-    needs: validate_branch
     outputs:
-      tag: ${{steps.output-tag.outputs.TAG_MSG}}
+      tag: ${{ steps.output-tag.outputs.TAG_MSG }}
     steps:
-      - name: Parse branch name
-        id: parse-data
-        uses: tj-actions/branch-names@v8
-
-      - name: Checkout code
+      - name: Checkout code (release branch)
         uses: actions/checkout@v3
         with:
           ref: ${{ env.RELEASE_BRANCH }}
           fetch-depth: 0
 
+      - name: Parse branch name
+        id: parse-data
+        uses: tj-actions/branch-names@v8
+
+      - name: Debug - Check files
+        run: |
+          echo "Workspace: ${{ github.workspace }}"
+          ls -la ${{ github.workspace }}/.github/workflows/scripts/
+          ls -la ${{ github.workspace }}/version/
+
       - name: Validate branch (feature/hotfix)
-        id: validate-branch
         if: |
           contains(steps.parse-data.outputs.current_branch, 'feature') || 
           contains(steps.parse-data.outputs.current_branch, 'hotfix')
         run: echo "Valid branch"
 
-      - name: Run minor version update script
-        id: update-minor-version
-        if: contains(steps.parse-data.outputs.current_branch, 'feature')
+      - name: Run version update script
         run: |
-          echo "Running: python ${{ env.VERSION_UP }} ${{ env.MINOR }} ${{ env.NAME_VERSION_FILE }}"
-          python ${{ env.VERSION_UP }} ${{ env.MINOR }} ${{ env.NAME_VERSION_FILE }}
-
-      - name: Run patch version update script
-        id: update-patch-version
-        if: contains(steps.parse-data.outputs.current_branch, 'hotfix')
-        run: |
-          echo "Running: python ${{ env.VERSION_UP }} ${{ env.PATCH }} ${{ env.NAME_VERSION_FILE }}"
-          python ${{ env.VERSION_UP }} ${{ env.PATCH }} ${{ env.NAME_VERSION_FILE }}
+          if [ ! -f "${{ env.VERSION_UP }}" ]; then
+            echo "Error: File ${{ env.VERSION_UP }} not found!"
+            exit 1
+          fi
+          
+          if [ "${{ contains(steps.parse-data.outputs.current_branch, 'feature') }}" = "true" ]; then
+            echo "Running minor update"
+            python ${{ env.VERSION_UP }} ${{ env.MINOR }} ${{ env.NAME_VERSION_FILE }}
+          elif [ "${{ contains(steps.parse-data.outputs.current_branch, 'hotfix') }}" = "true" ]; then
+            echo "Running patch update"
+            python ${{ env.VERSION_UP }} ${{ env.PATCH }} ${{ env.NAME_VERSION_FILE }}
+          else
+            echo "Unknown branch type"
+            exit 1
+          fi
 
       - name: Set output tag
         id: output-tag
