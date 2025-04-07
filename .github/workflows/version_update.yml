@@ -3,83 +3,78 @@ on:
   workflow_call:
 
 env:
-  NAME_VERSION_FILE: ${{ github.workspace }}/version/version
+  NAME_VERSION_FILE: ${{ github.workspace }}/version_info/version
   RELEASE_BRANCH: release
   MINOR: minor
   PATCH: patch
-  VERSION_UP: ${{ github.workspace }}/.github/workflows/scripts/version_update.py
+  VERSION_UP: .github/workflows/version_update.py
 
 jobs:
-  update-version:
+  validate_branch:
     runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.output-tag.outputs.TAG_MSG }}
     steps:
-      - name: Checkout release branch (with full history)
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0  # Полная история (иногда нужно для скриптов)
-          path: repo  # Явно указываем рабочую папку (опционально)
-
-      - name: Debug - Check if version_update.py exists
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -la .github/workflows/scripts/
-          if [ -f "${{ env.VERSION_UP }}" ]; then
-            echo "✅ File exists!"
-           else
-            echo "❌ File NOT FOUND: ${{ env.VERSION_UP }}"
-             exit 1
-          fi
+      - name: Checkout code
+        uses: actions/checkout@v2
 
       - name: Parse branch name
         id: parse-data
         uses: tj-actions/branch-names@v8
 
-      - name: Debug - Check files
+      - name: Print info about actions
         run: |
-          echo "Workspace: ${{ github.workspace }}"
-          ls -la ${{ github.workspace }}/.github/workflows/scripts/
-          ls -la ${{ github.workspace }}/version/
+          echo "EVENT_NAME   ${{github.event_name}}"
+          echo "ACTION       ${{github.event.action}}"
+          echo "IS_PULL_REQUEST_MERGED   ${{github.pull_request.merged}}"
+          echo "CURRENT_BRANCH     ${{steps.parse-data.outputs.current_branch}}"
+          echo "REF          ${{github.ref}}"
+          echo "REF_NAME     ${{github.ref_name}}"
+          echo "DEFAULT_BRANCH  ${{steps.parse-data.outputs.default_branch}}"
+
+  update-version:
+    runs-on: ubuntu-latest
+    needs: validate_branch
+    outputs:
+      tag: ${{steps.output-tag.outputs.TAG_MSG}}
+    steps:
+      - name: Parse branch name
+        id: parse-data
+        uses: tj-actions/branch-names@v8
+
+      - name: Сheckout on [${{env.RELEASE_BRANCH}}]
+        uses: actions/checkout@v2
 
       - name: Validate branch (feature/hotfix)
+        id: validate_branch
         if: |
           contains(steps.parse-data.outputs.current_branch, 'feature') || 
           contains(steps.parse-data.outputs.current_branch, 'hotfix')
         run: echo "Valid branch"
 
-      - name: Run version update script
+      - name: Run minor version update script
+        id: update-minor-version
+        if: |
+          contains(steps.parse-data.outputs.current_branch, 'feature')
         run: |
-          if [ ! -f "${{ env.VERSION_UP }}" ]; then
-            echo "Error: File ${{ env.VERSION_UP }} not found!"
-            exit 1
-          fi
-          
-          if [ "${{ contains(steps.parse-data.outputs.current_branch, 'feature') }}" = "true" ]; then
-            echo "Running minor update"
-            python ${{ env.VERSION_UP }} ${{ env.MINOR }} ${{ env.NAME_VERSION_FILE }}
-          elif [ "${{ contains(steps.parse-data.outputs.current_branch, 'hotfix') }}" = "true" ]; then
-            echo "Running patch update"
-            python ${{ env.VERSION_UP }} ${{ env.PATCH }} ${{ env.NAME_VERSION_FILE }}
-          else
-            echo "Unknown branch type"
-            exit 1
-          fi
+          echo "python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}"
+          python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}
+
+      - name: Run patch version update script
+        id: update-patch-version
+        if: |
+          contains(steps.parse-data.outputs.current_branch, 'hotfix')
+        run: |
+          python ${VERSION_UP} ${PATCH} ${NAME_VERSION_FILE}
 
       - name: Set output tag
         id: output-tag
-        run: |
-          TAG_MSG=$(python ${{ env.VERSION_UP }} ${{ env.NAME_VERSION_FILE }} version)
-          echo "TAG_MSG=$TAG_MSG" >> $GITHUB_OUTPUT
+        run: TAG_MSG=$(python ${{env.VERSION_UP}} ${{env.NAME_VERSION_FILE}} version)
 
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-
       - name: Commit and push changes
         run: |
           git add .
           git commit -m "Update version"
-          git push origin ${{ env.RELEASE_BRANCH }}
+          git push origin ${RELEASE_BRANCH}
