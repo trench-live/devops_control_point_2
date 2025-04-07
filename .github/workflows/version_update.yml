@@ -15,11 +15,23 @@ jobs:
     outputs:
       tag: ${{ steps.output-tag.outputs.TAG_MSG }}
     steps:
-      - name: Checkout code (release branch)
-        uses: actions/checkout@v3
+      - name: Checkout release branch (with full history)
+        uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_BRANCH }}
-          fetch-depth: 0
+          fetch-depth: 0  # Полная история (иногда нужно для скриптов)
+          path: repo  # Явно указываем рабочую папку (опционально)
+
+      - name: Debug - Check if version_update.py exists
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -la .github/workflows/scripts/
+          if [ -f "${{ env.VERSION_UP }}" ]; then
+            echo "✅ File exists!"
+           else
+            echo "❌ File NOT FOUND: ${{ env.VERSION_UP }}"
+             exit 1
+          fi
 
       - name: Parse branch name
         id: parse-data
