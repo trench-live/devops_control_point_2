@@ -15,12 +15,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  #
 
       - name: Parse branch name
         id: parse-data
         uses: tj-actions/branch-names@v8
+
+      - name: Сheckout on [${{env.RELEASE_BRANCH}}]
+        uses: actions/checkout@v3
 
   update-version:
     runs-on: ubuntu-latest
