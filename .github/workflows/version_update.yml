@@ -1,38 +1,70 @@
-name: Update Version
-
+name: Version files update
 on:
   workflow_call:
 
 env:
-  SCRIPT: .github/workflows/scripts/version_updater.py
+  NAME_VERSION_FILE: ${{ github.workspace }}/version/version
+  RELEASE_BRANCH: release
+  MINOR: minor
+  PATCH: patch
+  VERSION_UP: .github/workflows/scripts/version_update.py
 
 jobs:
+  validate_branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Parse branch name
+        id: parse-data
+        uses: tj-actions/branch-names@v8
+
   update-version:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    needs: validate_branch
+    outputs:
+      tag: ${{steps.output-tag.outputs.TAG_MSG}}
     steps:
-      - uses: actions/checkout@v3
+      - name: Parse branch name
+        id: parse-data
+        uses: tj-actions/branch-names@v8
 
-      - name: Detect branch type
-        id: branch
-        run: |
-          if [[ "${{ github.ref_name }}" == feature* ]]; then
-            echo "TYPE=minor" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref_name }}" == hotfix* ]]; then
-            echo "TYPE=patch" >> $GITHUB_OUTPUT
-          fi
+      - name: Сheckout on [${{env.RELEASE_BRACH}}]
+        uses: actions/checkout@v2
 
-      - name: Update version
+      - name: Validate branch (feature/hotfix)
+        id: validate_branch
+        if: |
+          contains(steps.parse-data.outputs.current_branch, 'feature') || 
+          contains(steps.parse-data.outputs.current_branch, 'hotfix')
+        run: echo "Valid branch"
+
+      - name: Run minor version update script
+        id: update-minor-version
+        if: |
+          contains(steps.parse-data.outputs.current_branch, 'feature')
         run: |
-          OLD_VER=$(head -n 1 version_info/version)
-          
-          python ${{ env.SCRIPT }} ${{ steps.branch.outputs.TYPE }}
-          
-          NEW_VER=$(head -n 1 version_info/version)
-          
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add version_info/version version_info/version_log
-          git commit -m "[$NEW_VER] <- [$OLD_VER] ${{ steps.branch.outputs.TYPE }} up"
-          git push
+          echo "python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}"
+          python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}
+
+      - name: Run patch version update script
+        id: update-patch-version
+        if: |
+          contains(steps.parse-data.outputs.currecint_branch, 'hotfix')
+        run: |
+          python ${VERSION_UP} ${PATCH} ${NAME_VERSION_FILE}
+
+      - name: Set output tag
+        id: output-tag
+        run: TAG_MSG=$(python ${{env.VERSION_UP}} ${{env.NAME_VERSION_FILE}} version)
+
+      - name: Setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: Commit and push changes
+        run: |
+          git add .
+          git commit -m "Update version"
+          git push origin ${RELEASE_BRANCH}
