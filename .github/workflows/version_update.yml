@@ -10,7 +10,9 @@ jobs:
   update-version:
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.update-version.outputs.NEW_VERSION }}
+      new_version:
+        description: "The new version tag"
+        value: ${{ jobs.update-version.outputs.tag }}
 
     steps:
       # Step 1: Checkout release branch
