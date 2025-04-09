@@ -53,19 +53,25 @@ jobs:
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # Step 5: Configure git
+      # Step 6: Clean pycache
+      - name: Clean __pycache__
+        run: |
+          find . -name "__pycache__" -exec rm -rf {} + || true
+          find . -name "*.pyc" -delete
+
+      # Step 7: Configure git
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
-      # Step 7: Commit changes
+      # Step 8: Commit changes
       - name: Commit version update
         run: |
-          git add .
+          git add ../version_info
           git commit -m "[${{ steps.update-version.outputs.NEW_VERSION }}] <- [${{ steps.update-version.outputs.OLD_VERSION }}] ${{ steps.version-type.outputs.UPDATE_TYPE }} up"
 
-      # Step 8: Push changes
+      # Step 9: Push changes
       - name: Push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
