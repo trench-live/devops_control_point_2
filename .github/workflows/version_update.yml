@@ -62,8 +62,8 @@ jobs:
       # Step 7: Commit changes
       - name: Commit version update
         run: |
-          git add ${{ env.VERSION_FILE }}
-          git commit -m "[${{ steps.update-version.outputs.NEW_VERSION }}] <- [${{ steps.update-version.outputs.OLD_VERSION }}] ${{ steps.version-type.outputs.BUMP_TYPE }} up"
+          git add .
+          git commit -m "[${{ steps.update-version.outputs.NEW_VERSION }}] <- [${{ steps.update-version.outputs.OLD_VERSION }}] ${{ steps.version-type.outputs.UPDATE_TYPE }} up"
 
       # Step 8: Push changes
       - name: Push changes
