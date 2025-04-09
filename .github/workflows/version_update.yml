@@ -68,7 +68,7 @@ jobs:
       # Step 8: Commit changes
       - name: Commit version update
         run: |
-          git add ../version_info
+          git add version_info/
           git commit -m "[${{ steps.update-version.outputs.NEW_VERSION }}] <- [${{ steps.update-version.outputs.OLD_VERSION }}] ${{ steps.version-type.outputs.UPDATE_TYPE }} up"
 
       # Step 9: Push changes
