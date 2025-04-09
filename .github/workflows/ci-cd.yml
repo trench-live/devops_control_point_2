@@ -26,4 +26,4 @@ jobs:
     needs: version_update
     uses: trench-live/devops_control_point_2/.github/workflows/log_changes.yml@release
     with:
-      update_tag: ${{ needs.update-version.outputs.tag }}
+      update_tag: ${{ needs.version_update.outputs.new_version }}
