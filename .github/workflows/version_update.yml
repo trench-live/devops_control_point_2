@@ -1,6 +1,10 @@
 name: Version update
 on:
   workflow_call:
+    outputs:
+      new_version: # Единственный output
+        description: "The new version tag"
+        value: ${{ jobs.update-version.outputs.new_version }}
 
 env:
   RELEASE_BRANCH: release
@@ -10,7 +14,7 @@ jobs:
   update-version:
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.version-output.outputs.NEW_VERSION }}
+      new_version: ${{ steps.update-version.outputs.NEW_VERSION }}
 
     steps:
       # Step 1: Checkout release branch
