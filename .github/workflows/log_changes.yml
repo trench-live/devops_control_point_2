@@ -1,0 +1,64 @@
+name: Log changes
+on:
+  workflow_call:
+    inputs:
+      update_tag:
+        type: string
+        required: true
+        description: "The version tag to be updated in the changelog"
+env:
+  RELEASE_BRANCH: release
+  CHANGELOG_FILE: changelog.md
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the code from the release branch
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{env.RELEASE_BRANCH}}
+
+      # Pull latest changes to avoid conflicts
+      - name: Pull latest changes
+        run: git pull
+
+      # Update the changelog file with new version information
+      - name: Update changelog
+        run: |
+          # Append new version entry to changelog
+          echo "${{inputs.update_tag}} $(date +"%Y.%m.%d") — updated from ${{ github.event.pull_request.head.ref }}" >> ${{env.CHANGELOG_FILE}}
+          echo "***" >> ${{env.CHANGELOG_FILE}}  # Add separator line
+
+      # Configure git for the automated commit
+      - name: Configure git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+
+      # Commit and push the changelog changes
+      - name: Commit and push changes
+        run: |
+          git add ${{env.CHANGELOG_FILE}}
+          git commit -m "chore: Update ${CHANGELOG_FILE} for ${{inputs.update_tag}}"
+          git push origin ${{env.RELEASE_BRANCH}}
+
+      # Upload the updated changelog as an artifact
+      - name: Upload changelog artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{env.CHANGELOG_FILE}}
+          path: ${{env.CHANGELOG_FILE}}
+
+      # Add a version-specific label to the PR
+      - name: Label pull request
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: [`changelog-${{inputs.update_tag}}`]
+            })

@@ -10,7 +10,7 @@ jobs:
   update-version:
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.version-output.outputs.NEW_VERSION }}
+      new_version: ${{ steps.update-version.outputs.NEW_VERSION }}
 
     steps:
       # Step 1: Checkout release branch
@@ -52,6 +52,7 @@ jobs:
           NEW_VERSION=$(python ${{ env.VERSION_UP }} get)
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       # Step 6: Clean pycache
       - name: Clean __pycache__
