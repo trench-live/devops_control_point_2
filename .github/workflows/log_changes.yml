@@ -27,9 +27,10 @@ jobs:
       # Update the changelog file with new version information
       - name: Update changelog
         run: |
-          # Append new version entry to changelog
-          echo "${{inputs.update_tag}} $(date +"%Y.%m.%d") — updated from ${{ github.event.pull_request.head.ref }}" >> ${{env.CHANGELOG_FILE}}
-          echo "***" >> ${{env.CHANGELOG_FILE}}  # Add separator line
+          TIMESTAMP=$(date +"%Y.%m.%d %H:%M:%S")
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          ENTRY="#### ${{inputs.update_tag}} - ${TIMESTAMP} ${BRANCH_NAME}\n---"
+          echo -e "${ENTRY}\n$(cat ${{env.CHANGELOG_FILE}})" > ${{env.CHANGELOG_FILE}}
 
       # Configure git for the automated commit
       - name: Configure git
