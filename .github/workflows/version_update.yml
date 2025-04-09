@@ -47,9 +47,9 @@ jobs:
       - name: Update version
         id: update-version
         run: |
-          OLD_VERSION=$(python ${{ env.VERSION_SCRIPT }} get)
-          python ${{ env.VERSION_SCRIPT }} ${{ steps.version-type.outputs.BUMP_TYPE }}
-          NEW_VERSION=$(python ${{ env.VERSION_SCRIPT }} get)
+          OLD_VERSION=$(python ${{ env.VERSION_UP }} get)
+          python ${{ env.VERSION_UP }} ${{ steps.version-type.outputs.BUMP_TYPE }}
+          NEW_VERSION=$(python ${{ env.VERSION_UP }} get)
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
