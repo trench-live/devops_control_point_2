@@ -4,8 +4,6 @@ on:
 
 env:
   RELEASE_BRANCH: release
-  MINOR: minor
-  PATCH: patch
   VERSION_UP: .github/scripts/version_update.py
 
 jobs:
@@ -15,12 +13,18 @@ jobs:
       new_version: ${{ steps.version-output.outputs.NEW_VERSION }}
 
     steps:
-      # Step 1: Getting branch info
+      # Step 1: Checkout release branch
+      - name: Checkout release branch
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ env.RELEASE_BRANCH }}
+
+      # Step 2: Get branch info
       - name: Extract branch info
         id: branch-info
         uses: tj-actions/branch-names@v8
 
-      # Step 2: Validating branch
+      # Step 3: Validate branch
       - name: Validate branch (feature/hotfix)
         id: validate-branch
         run: |
@@ -28,10 +32,6 @@ jobs:
             echo "::error::Branch must be either feature/* or hotfix/*"
             exit 1
           fi
-
-      # Step 3: Checkout release branch code
-      - name: Сheckout on [${{env.RELEASE_BRANCH}}]
-        uses: actions/checkout@v2
 
       # Step 4: Determine update type
       - name: Determine version update type
@@ -43,12 +43,12 @@ jobs:
             echo "UPDATE_TYPE=patch" >> $GITHUB_OUTPUT
           fi
 
-      # Step 5: Version update
+      # Step 5: Run version update script
       - name: Update version
         id: update-version
         run: |
           OLD_VERSION=$(python ${{ env.VERSION_UP }} get)
-          python ${{ env.VERSION_UP }} ${{ steps.version-type.outputs.BUMP_TYPE }}
+          python ${{ env.VERSION_UP }} ${{ steps.version-type.outputs.UPDATE_TYPE }}
           NEW_VERSION=$(python ${{ env.VERSION_UP }} get)
           echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
@@ -56,8 +56,8 @@ jobs:
       # Step 6: Clean pycache
       - name: Clean __pycache__
         run: |
-          find . -name "__pycache__" -exec rm -rf {} + || true
-          find . -name "*.pyc" -delete
+          find .github/scripts -name "__pycache__" -exec rm -rf {} + || true
+          find .github/scripts -name "*.pyc" -delete
 
       # Step 7: Configure git
       - name: Setup git config
@@ -68,11 +68,11 @@ jobs:
       # Step 8: Commit changes
       - name: Commit version update
         run: |
-          git add .
+          git add version_info/
           git commit -m "[${{ steps.update-version.outputs.NEW_VERSION }}] <- [${{ steps.update-version.outputs.OLD_VERSION }}] ${{ steps.version-type.outputs.UPDATE_TYPE }} up"
 
       # Step 9: Push changes
       - name: Push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: git push origin ${RELEASE_BRANCH}
+        run: git push origin ${{ env.RELEASE_BRANCH }}
