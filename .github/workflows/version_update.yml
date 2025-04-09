@@ -1,80 +1,72 @@
-name: Version files update
+name: Version update
 on:
   workflow_call:
 
 env:
-  NAME_VERSION_FILE: ${{ github.workspace }}/version_info/version
   RELEASE_BRANCH: release
   MINOR: minor
   PATCH: patch
-  VERSION_UP: .github/workflows/version_update.py
+  VERSION_UP: .github/scripts/version_update.py
 
 jobs:
-  validate_branch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Parse branch name
-        id: parse-data
-        uses: tj-actions/branch-names@v8
-
-      - name: Print info about actions
-        run: |
-          echo "EVENT_NAME   ${{github.event_name}}"
-          echo "ACTION       ${{github.event.action}}"
-          echo "IS_PULL_REQUEST_MERGED   ${{github.pull_request.merged}}"
-          echo "CURRENT_BRANCH     ${{steps.parse-data.outputs.current_branch}}"
-          echo "REF          ${{github.ref}}"
-          echo "REF_NAME     ${{github.ref_name}}"
-          echo "DEFAULT_BRANCH  ${{steps.parse-data.outputs.default_branch}}"
-
   update-version:
     runs-on: ubuntu-latest
-    needs: validate_branch
     outputs:
-      tag: ${{steps.output-tag.outputs.TAG_MSG}}
+      new_version: ${{ steps.version-output.outputs.NEW_VERSION }}
+
     steps:
-      - name: Parse branch name
-        id: parse-data
+      # Step 1: Getting branch info
+      - name: Extract branch info
+        id: branch-info
         uses: tj-actions/branch-names@v8
 
+      # Step 2: Validating branch
+      - name: Validate branch (feature/hotfix)
+        id: validate-branch
+        run: |
+          if [[ ! "${{ steps.branch-info.outputs.current_branch }}" =~ ^(feature|hotfix)/ ]]; then
+            echo "::error::Branch must be either feature/* or hotfix/*"
+            exit 1
+          fi
+
+      # Step 3: Checkout release branch code
       - name: Сheckout on [${{env.RELEASE_BRANCH}}]
         uses: actions/checkout@v2
 
-      - name: Validate branch (feature/hotfix)
-        id: validate_branch
-        if: |
-          contains(steps.parse-data.outputs.current_branch, 'feature') || 
-          contains(steps.parse-data.outputs.current_branch, 'hotfix')
-        run: echo "Valid branch"
-
-      - name: Run minor version update script
-        id: update-minor-version
-        if: |
-          contains(steps.parse-data.outputs.current_branch, 'feature')
+      # Step 4: Determine update type
+      - name: Determine version update type
+        id: version-type
         run: |
-          echo "python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}"
-          python ${VERSION_UP} ${MINOR} ${NAME_VERSION_FILE}
+          if [[ "${{ steps.branch-info.outputs.current_branch }}" == feature/* ]]; then
+            echo "UPDATE_TYPE=minor" >> $GITHUB_OUTPUT
+          else
+            echo "UPDATE_TYPE=patch" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Run patch version update script
-        id: update-patch-version
-        if: |
-          contains(steps.parse-data.outputs.current_branch, 'hotfix')
+      # Step 5: Version update
+      - name: Update version
+        id: update-version
         run: |
-          python ${VERSION_UP} ${PATCH} ${NAME_VERSION_FILE}
+          OLD_VERSION=$(python ${{ env.VERSION_SCRIPT }} get)
+          python ${{ env.VERSION_SCRIPT }} ${{ steps.version-type.outputs.BUMP_TYPE }}
+          NEW_VERSION=$(python ${{ env.VERSION_SCRIPT }} get)
+          echo "OLD_VERSION=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Set output tag
-        id: output-tag
-        run: TAG_MSG=$(python ${{env.VERSION_UP}} ${{env.NAME_VERSION_FILE}} version)
-
+      # Step 5: Configure git
       - name: Setup git config
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
-      - name: Commit and push changes
+
+      # Step 7: Commit changes
+      - name: Commit version update
         run: |
-          git add .
-          git commit -m "Update version"
-          git push origin ${RELEASE_BRANCH}
+          git add ${{ env.VERSION_FILE }}
+          git commit -m "[${{ steps.update-version.outputs.NEW_VERSION }}] <- [${{ steps.update-version.outputs.OLD_VERSION }}] ${{ steps.version-type.outputs.BUMP_TYPE }} up"
+
+      # Step 8: Push changes
+      - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: git push origin ${RELEASE_BRANCH}
