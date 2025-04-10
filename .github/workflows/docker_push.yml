@@ -10,7 +10,7 @@ on:
 
 env:
   DOCKERHUB_USER: ${{ secrets.DOCKER_HUB_LOGIN }}
-  REPO_NAME: 'trenchlive/devops_control_point_2'
+  REPO_NAME: 'devops_control_point_2'
   DOCKERFILE: 'Dockerfile'
 
 jobs:
@@ -23,8 +23,8 @@ jobs:
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_HUB_TOKEN }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -40,7 +40,7 @@ jobs:
         if: contains(fromJson('["README.md", "README.MD", "readme.md"]'), 'README.md')
         uses: peter-evans/dockerhub-description@v3
         with:
-          username: ${{ secrets.DOCKER_HUB_TOKEN }}
-          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
           repository: ${{ env.REPO_NAME }}
           readme-filepath: ./README.md
