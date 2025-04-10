@@ -3,7 +3,7 @@ name: Docker Image Publish
 on:
   workflow_call:
     inputs:
-      version_tag:
+      update_tag:
         type: string
         required: true
         description: "Version tag (format: X.Y.Z)"
@@ -33,7 +33,7 @@ jobs:
           file: ${{ env.DOCKERFILE }}
           push: true
           tags: |
-            ${{ env.DOCKERHUB_USER }}/${{ env.REPO_NAME }}:${{ inputs.version_tag }}
+            ${{ env.DOCKERHUB_USER }}/${{ env.REPO_NAME }}:${{ inputs.update_tag }}
             ${{ env.DOCKERHUB_USER }}/${{ env.REPO_NAME }}:latest
 
       - name: Check for README
