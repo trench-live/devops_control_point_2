@@ -11,6 +11,7 @@ on:
 env:
   REPO_NAME: 'devops_control_point_2'
   DOCKERFILE: 'Dockerfile'
+  README: 'README.md'
 
 jobs:
   publish:
@@ -45,4 +46,4 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_LOGIN }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
           repository: ${{ env.REPO_NAME }}
-          readme-filepath: ./README.md
+          readme-filepath: ${{ env.README }}
