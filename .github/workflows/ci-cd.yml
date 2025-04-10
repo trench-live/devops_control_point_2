@@ -31,7 +31,5 @@ jobs:
   docker_push:
     needs: log_changes
     uses: trench-live/devops_control_point_2/.github/workflows/docker_push.yml@release
-    secrets:
-      inherit: true
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
