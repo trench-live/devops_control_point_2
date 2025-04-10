@@ -27,3 +27,9 @@ jobs:
     uses: trench-live/devops_control_point_2/.github/workflows/log_changes.yml@release
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
+
+  docker_push:
+    needs: log_changes
+    uses: trench-live/devops_control_point_2/.github/workflows/docker_push.yml@release
+    with:
+      update_tag: ${{ needs.version_update.outputs.new_version }}
