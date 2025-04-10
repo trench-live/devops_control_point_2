@@ -7,12 +7,6 @@ on:
         type: string
         required: true
         description: "Version tag (format: X.Y.Z)"
-      docker_hub_login:
-        type: string
-        required: true
-      docker_hub_password:
-        type: string
-        required: true
 
 env:
   REPO_NAME: 'devops_control_point_2'
@@ -25,16 +19,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug inputs
+      - name: Debug secrets
         run: |
-          echo "Login: ${{ inputs.docker_hub_login != '' }}"
-          echo "Password: ${{ inputs.docker_hub_password != '' }}"        
+          echo "DOCKER_HUB_LOGIN: ${{ secrets.DOCKER_HUB_LOGIN != '' }}"
+          echo "DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD != '' }}"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
-          username: ${{ inputs.docker_hub_login }}
-          password: ${{ inputs.docker_hub_password }}
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -42,13 +36,13 @@ jobs:
           context: .
           file: ${{ env.DOCKERFILE }}
           push: true
-          tags: ${{ inputs.docker_hub_login }}/${{ env.REPO_NAME }}:v${{ inputs.update_tag }}  # Используем input
+          tags: ${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}:v${{ inputs.update_tag }}
 
       - name: Update description
         if: contains(fromJson('["README.md", "README.MD", "readme.md"]'), 'README.md')
         uses: peter-evans/dockerhub-description@v3
         with:
-          username: ${{ inputs.docker_hub_login }}  # Используем input
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}  # Оставляем токен как секрет
+          username: ${{ secrets.DOCKER_HUB_LOGIN }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
           repository: ${{ env.REPO_NAME }}
           readme-filepath: ./README.md
