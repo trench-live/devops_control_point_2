@@ -1,3 +1,5 @@
+#### 1.13.0 - 2025.04.10 20:25:54 feature/add_docker_publish
+---
 #### 1.12.0 - 2025.04.10 20:04:30 feature/add_docker_publish
 ---
 #### 1.11.0 - 2025.04.10 18:31:13 feature/add_docker_publish
