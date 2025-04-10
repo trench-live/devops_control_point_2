@@ -32,7 +32,6 @@ jobs:
     needs: log_changes
     uses: trench-live/devops_control_point_2/.github/workflows/docker_push.yml@release
     secrets:
-      DOCKER_HUB_LOGIN: ${{ secrets.DOCKER_HUB_LOGIN }}
-      DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      inherit: true
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
