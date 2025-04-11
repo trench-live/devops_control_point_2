@@ -20,19 +20,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug secrets
-        run: |
-          echo "DOCKER_HUB_LOGIN: ${{ secrets.DOCKER_HUB_LOGIN != '' }}"
-          echo "DOCKER_HUB_PASSWORD: ${{ secrets.DOCKER_HUB_TOKEN != '' }}"
-
-      - name: Check README.md exists
-        run: |
-          if [ ! -f "${{ env.README }}" ]; then
-            echo "❌ Error: ${{ env.README }} not found!"
-            exit 1
-          fi
-          echo "✅ README.md found and valid."
-
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -47,11 +34,12 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}:v${{ inputs.update_tag }}
 
-      - name: Update description
-        if: contains(fromJson('["README.md", "README.MD", "readme.md"]'), 'README.md')
-        uses: peter-evans/dockerhub-description@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_LOGIN }}
-          password: ${{ secrets.DOCKER_HUB_TOKEN }}
-          repository: ${{ env.REPO_NAME }}
-          readme-filepath: ${{ env.README }}
+      - name: Update Docker Hub description via API
+        run: |
+          DESCRIPTION=$(base64 -w 0 README.md)
+          
+          curl -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.DOCKER_HUB_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"full_description": "'"$DESCRIPTION"'"}' \
+            "https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/"
