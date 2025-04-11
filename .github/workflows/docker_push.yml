@@ -36,10 +36,10 @@ jobs:
 
       - name: Update Docker Hub description via API
         run: |
-          DESCRIPTION=$(base64 -w 0 README.md)
-          
+          DESCRIPTION=$(cat README.md | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+          JSON_DATA='{"full_description": "'"$DESCRIPTION"'"}'
           curl -X PATCH \
-            -H "Authorization: Bearer ${{ secrets.DOCKER_HUB_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{"full_description": "'"$DESCRIPTION"'"}' \
-            "https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/"
+          -H "Authorization: Bearer ${{ secrets.DOCKER_HUB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d "$JSON_DATA" \
+          "https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/"
