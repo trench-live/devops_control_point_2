@@ -2,7 +2,7 @@ name: Version update
 on:
   workflow_call:
     outputs:
-      new_version: # Единственный output
+      new_version:
         description: "The new version tag"
         value: ${{ jobs.update-version.outputs.new_version }}
 
