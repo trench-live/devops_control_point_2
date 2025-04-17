@@ -18,10 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Send Telegram Notification
     steps:
-      - name: Parse branch and tag information
-        id: parse-branch
-        uses: tj-actions/branch-names@v8
-
       - name: Checkout repository code
         uses: actions/checkout@v3
 
@@ -36,6 +32,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.CHANGELOG_FILE }}
+
+      - name: Debug update_tag
+        run: |
+          echo "update_tag: ${{ inputs.update_tag }}"
 
       - name: Send Telegram notification
         uses: appleboy/telegram-action@master
@@ -56,7 +56,7 @@ jobs:
             
             <b>🔗 Git Repository</b>
             <b>🔄 Pull Request</b>: <a href="${{ env.REPO_URL }}/pull/${{ env.PR_NUMBER }}">#${{ env.PR_NUMBER }}</a>
-            <b>🏷️ Release Tag</b>: <a href="${{ env.REPO_URL }}/releases/tag/v${{ steps.parse-branch.outputs.tag }}">${{ inputs.update_tag }}</a>
+            <b>🏷️ Release Tag</b>: <a href="${{ env.REPO_URL }}/releases/tag/v${{ inputs.update_tag }}">${{ inputs.update_tag }}</a>
             
             <b>🐳 Docker Repository</b>
             <b>📦 Image</b>: <a href="https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/general">${{ env.REPO_NAME }}</a>
