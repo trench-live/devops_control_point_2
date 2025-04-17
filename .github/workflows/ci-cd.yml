@@ -48,3 +48,10 @@ jobs:
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
     secrets: inherit
+
+  release:
+    needs: [ version_update, deploy ]
+    uses: trench-live/devops_control_point_2/.github/workflows/release.yml@release
+    with:
+      ${{ needs.version_update.outputs.new_version }}
+    secrets: inherit

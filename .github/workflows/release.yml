@@ -1,0 +1,43 @@
+name: Create GitHub Release
+
+on:
+  workflow_call:
+    inputs:
+      update_tag:
+        type: string
+        required: true
+        description: "Version number"
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  DOCKERHUB_URL: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/tags
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        id: release
+        uses: actions/create-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "v${{ inputs.update_tag }}"
+          release_name: "Release v${{ inputs.update_tag }}"
+          body: |
+            ## Release Overview
+            ${{ github.event.repository.description }}
+            
+            ### Deployment Details
+            - Associated Pull Request: `#${{ github.event.number }}`
+            - Docker Image: [${{ env.REPO_NAME }}:${{ inputs.update_tag }}](${{ env.DOCKERHUB_URL }})
+          draft: false
+          prerelease: ${{ contains(inputs.update_tag, '-') }}  # Auto-detect pre-releases
