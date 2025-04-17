@@ -1,3 +1,5 @@
+#### 1.26.0 - 2025.04.17 13:40:53 feature/add_telegram_notification
+---
 #### 1.25.0 - 2025.04.11 09:44:17 feature/add_docker_publish
 ---
 #### 1.24.0 - 2025.04.11 09:31:13 feature/add_docker_publish
