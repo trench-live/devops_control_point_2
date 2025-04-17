@@ -8,6 +8,9 @@ on:
         required: true
         description: "Version number"
 
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+
 jobs:
   create-release:
     name: Create GitHub Release
