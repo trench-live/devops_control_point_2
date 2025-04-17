@@ -1,3 +1,5 @@
+#### 1.29.0 - 2025.04.17 14:41:37 feature/add_telegram_notification
+---
 #### 1.28.0 - 2025.04.17 14:24:27 feature/add_telegram_notification
 ---
 #### 1.27.0 - 2025.04.17 13:47:34 feature/add_telegram_notification
