@@ -1,0 +1,64 @@
+name: Telegram Notification
+on:
+  workflow_call:
+    inputs:
+      update_tag:
+        type: string
+        required: true
+        description: "Version tag for the update"
+
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+  PR_NUMBER: ${{ github.event.number }}
+  CHANGELOG_FILE: changelog.md
+
+jobs:
+  notify_telegram:
+    runs-on: ubuntu-latest
+    name: Send Telegram Notification
+    steps:
+      - name: Parse branch and tag information
+        id: parse-branch
+        uses: tj-actions/branch-names@v8
+
+      - name: Checkout repository code
+        uses: actions/checkout@v3
+
+      - name: Get current timestamp
+        id: current-time
+        uses: josStorer/get-current-time@v2
+        with:
+          format: YYYY.MM.DD HH:mm:ss
+          utcOffset: "+08:00"
+
+      - name: Download changelog artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.CHANGELOG_FILE }}
+
+      - name: Send Telegram notification
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHANNEL }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          document: ${{ env.CHANGELOG_FILE }}
+          message: |
+            <b>🚀 New Update Available</b>
+            
+            <b>📌 Project</b>: <code>${{ env.REPO_NAME }}</code>
+            <b>🏷️ Version</b>: <code>${{ inputs.update_tag }}</code>
+            <b>📅 Date</b>: <code>${{ steps.current-time.outputs.formattedTime }}</code>
+            <b>👤 Author</b>: 
+            <a href="https://github.com/Y-Sulphuris">Y-Sulphuris</a>
+            (<a href="https://hub.docker.com/repositories/${{ secrets.DOCKER_HUB_LOGIN }}">${{ secrets.DOCKER_HUB_LOGIN }}</a>)
+            
+            <b>🔗 Git Repository</b>
+            <b>🔄 Pull Request</b>: <a href="${{ env.REPO_URL }}/pull/${{ env.PR_NUMBER }}">#${{ env.PR_NUMBER }}</a>
+            <b>🏷️ Release Tag</b>: <a href="${{ env.REPO_URL }}/releases/tag/v${{ steps.parse-branch.outputs.tag }}">${{ inputs.update_tag }}</a>
+            
+            <b>🐳 Docker Repository</b>
+            <b>📦 Image</b>: <a href="https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/general">${{ env.REPO_NAME }}</a>
+            <b>🏷️ Tag</b>: <a href="https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/tags">${{ inputs.update_tag }}</a>
+            <b>📛 Full Name</b>: <a href="https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/tags">${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}:v${{ inputs.update_tag }}</a>
