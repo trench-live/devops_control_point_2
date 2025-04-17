@@ -43,7 +43,7 @@ jobs:
     secrets: inherit
 
   deploy:
-    needs: [ version_update, docker_push ]
+    needs: [ version_update, telegram_notify ]
     uses: trench-live/devops_control_point_2/.github/workflows/deploy.yml@release
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
