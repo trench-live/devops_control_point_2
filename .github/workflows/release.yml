@@ -9,7 +9,7 @@ on:
         description: "Version number"
 
 env:
-  DOCKERHUB_URL: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ github.event.repository.name }}/tags
+  DOCKERHUB_URL: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ github.repository }}/tags
 
 jobs:
   create-release:
@@ -23,20 +23,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create GitHub Release
-        id: release
-        uses: actions/create-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: "v${{ inputs.update_tag }}"
-          release_name: "Release v${{ inputs.update_tag }}"
+          tag_name: v${{ inputs.update_tag }}
+          name: Release v${{ inputs.update_tag }}
           body: |
             ## Release Overview
-            ${{ github.event.repository.description }}
+            Version ${{ inputs.update_tag }} deployed to production
             
             ### Deployment Details
-            - Associated Pull Request: `#${{ github.event.number }}`
-            - Docker Image: [${{ github.event.repository.name }}:${{ inputs.update_tag }}](${{ env.DOCKERHUB_URL }})
-          draft: false
+            - Docker Image: [${{ github.repository }}:${{ inputs.update_tag }}](${{ env.DOCKERHUB_URL }})
           prerelease: ${{ contains(inputs.update_tag, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
