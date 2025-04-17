@@ -26,9 +26,9 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_LOGIN }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
 
-      - name: Debug update_tag
+      - name: Debug inputs.update_tag
         run: |
-          echo "update_tag: ${{ inputs.update_tag }}"
+          echo "inputs.update_tag (raw): ${{ toJson(inputs.update_tag) }}"
 
       - name: Build and push
         uses: docker/build-push-action@v4

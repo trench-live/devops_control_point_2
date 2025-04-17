@@ -5,7 +5,7 @@ on:
       update_tag:
         type: string
         required: true
-        description: "Version tag for the update"
+        description: "Version tag"
 
 env:
   REPO_NAME: ${{ github.event.repository.name }}
