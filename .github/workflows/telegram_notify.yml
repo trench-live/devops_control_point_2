@@ -33,10 +33,6 @@ jobs:
         with:
           name: ${{ env.CHANGELOG_FILE }}
 
-      - name: Debug update_tag
-        run: |
-          echo "update_tag: ${{ inputs.update_tag }}"
-
       - name: Send Telegram notification
         uses: appleboy/telegram-action@master
         with:
