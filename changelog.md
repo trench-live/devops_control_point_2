@@ -1,3 +1,5 @@
+#### 1.37.0 - 2025.04.17 19:43:25 feature/add_release_workflow
+---
 #### 1.36.0 - 2025.04.17 19:36:34 feature/add_release_workflow
 ---
 #### 1.35.0 - 2025.04.17 18:12:51 feature/add_prod_deploy
