@@ -8,9 +8,6 @@ on:
         required: true
         description: "Version number"
 
-env:
-  DOCKERHUB_URL: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ github.repository }}/tags
-
 jobs:
   create-release:
     name: Create GitHub Release
@@ -33,7 +30,7 @@ jobs:
             Version ${{ inputs.update_tag }} deployed to production
             
             ### Deployment Details
-            - Docker Image: [${{ github.repository }}:${{ inputs.update_tag }}](${{ env.DOCKERHUB_URL }})
+            - Docker Image: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/tags
           prerelease: ${{ contains(inputs.update_tag, '-') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
