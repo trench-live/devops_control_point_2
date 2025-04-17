@@ -9,8 +9,7 @@ on:
         description: "Version number"
 
 env:
-  REPO_NAME: ${{ github.event.repository.name }}
-  DOCKERHUB_URL: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ env.REPO_NAME }}/tags
+  DOCKERHUB_URL: https://hub.docker.com/repository/docker/${{ secrets.DOCKER_HUB_LOGIN }}/${{ github.event.repository.name }}/tags
 
 jobs:
   create-release:
@@ -38,6 +37,6 @@ jobs:
             
             ### Deployment Details
             - Associated Pull Request: `#${{ github.event.number }}`
-            - Docker Image: [${{ env.REPO_NAME }}:${{ inputs.update_tag }}](${{ env.DOCKERHUB_URL }})
+            - Docker Image: [${{ github.event.repository.name }}:${{ inputs.update_tag }}](${{ env.DOCKERHUB_URL }})
           draft: false
-          prerelease: ${{ contains(inputs.update_tag, '-') }}  # Auto-detect pre-releases
+          prerelease: ${{ contains(inputs.update_tag, '-') }}
