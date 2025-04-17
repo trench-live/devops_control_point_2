@@ -1,0 +1,53 @@
+name: Deploy
+on:
+  workflow_call:
+    inputs:
+      update_tag:
+        type: string
+        required: true
+        description: "update version tag"
+env:
+  REPO_NAME: ${{ github.event.repository.name }}
+  IMAGE_NAME: ${{secrets.DOCKER_HUB_LOGIN}}/${{ github.event.repository.name }}:v${{inputs.update_tag}}
+jobs:
+  mkmatrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev,test,stage]
+    steps:
+      - name: Deploy to stands
+        run: echo "start on ${{matrix.environment}}"
+
+  deploy:
+    name: PROD
+    environment: prod
+    runs-on: self-hosted
+    steps:
+      - name: Сheckout on [${{env.RELEASE}}]
+        uses: actions/checkout@v3
+
+
+      - name: Create .ENV
+        shell: powershell
+        run: |
+          New-Item "prod.env" -ItemType file -Force
+          Add-Content "prod.env" "VERSION=${{ inputs.update_tag }}"
+          Add-Content "prod.env" "CONTAINER_NAME=${{ env.REPO_NAME }}"
+          Add-Content "prod.env" "DOCKER_HUB_IMAGE = ${{ env.IMAGE_NAME }}"
+
+      - name: Run DockerImage
+        run: |
+          docker ps -a 
+          docker image ls
+          docker-compose -f docker-compose.yml --env-file "prod.env" up -d 
+
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['PROD']
+            })
