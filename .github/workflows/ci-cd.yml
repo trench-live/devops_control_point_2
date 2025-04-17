@@ -34,3 +34,10 @@ jobs:
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
     secrets: inherit
+
+  telegram_notify:
+    needs: docker_push
+    uses: trench-live/devops_control_point_2/.github/workflows/telegram_notify.yml@release
+    secrets: inherit
+    with:
+      update_tag: ${{ needs.version_update.outputs.new_version }}
