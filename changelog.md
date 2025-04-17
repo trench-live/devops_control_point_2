@@ -1,3 +1,17 @@
+#### 1.32.0 - 2025.04.17 15:19:49 feature/add_telegram_notification
+---
+#### 1.31.0 - 2025.04.17 15:06:31 feature/add_telegram_notification
+---
+#### 1.30.0 - 2025.04.17 14:54:18 feature/add_telegram_notification
+---
+#### 1.29.0 - 2025.04.17 14:41:37 feature/add_telegram_notification
+---
+#### 1.28.0 - 2025.04.17 14:24:27 feature/add_telegram_notification
+---
+#### 1.27.0 - 2025.04.17 13:47:34 feature/add_telegram_notification
+---
+#### 1.26.0 - 2025.04.17 13:40:53 feature/add_telegram_notification
+---
 #### 1.25.0 - 2025.04.11 09:44:17 feature/add_docker_publish
 ---
 #### 1.24.0 - 2025.04.11 09:31:13 feature/add_docker_publish
