@@ -29,14 +29,14 @@ jobs:
       update_tag: ${{ needs.version_update.outputs.new_version }}
 
   docker_push:
-    needs: log_changes
+    needs: [ version_update, log_changes ]
     uses: trench-live/devops_control_point_2/.github/workflows/docker_push.yml@release
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
     secrets: inherit
 
   telegram_notify:
-    needs: docker_push
+    needs: [ version_update, docker_push ]
     uses: trench-live/devops_control_point_2/.github/workflows/telegram_notify.yml@release
     with:
       update_tag: ${{ needs.version_update.outputs.new_version }}
