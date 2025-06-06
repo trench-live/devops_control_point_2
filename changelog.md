@@ -1,3 +1,5 @@
+#### 1.40.0 - 2025.06.06 10:39:49 feature/add_k8s
+---
 #### 1.39.0 - 2025.04.17 20:01:54 feature/add_release_workflow
 ---
 #### 1.38.0 - 2025.04.17 19:56:38 feature/add_release_workflow
