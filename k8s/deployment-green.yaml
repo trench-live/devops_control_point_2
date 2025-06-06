@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: devops-control-point
+  name: devops-control-point-gv1410
   labels:
     app: devops-control-point
-    version: v1.40.0
+    version: v1.41.0
 spec:
   replicas: 2
   selector:
     matchLabels:
       app: devops-control-point
-      version: v1.40.0
+      version: v1.41.0
   template:
     metadata:
       labels:
         app: devops-control-point
-        version: v1.40.0
+        version: v1.41.0
     spec:
       containers:
         - name: land-devops-container
-          image: trenchlive/devops_control_point_2:v1.40.0
+          image: trenchlive/devops_control_point_2:v1.41.0
           resources:
             requests:
               memory: "128Mi"
