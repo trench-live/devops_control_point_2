@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-control-point
+  labels:
+    app: devops-control-point
+    version: v1.39.0
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: devops-control-point
+      version: v1.39.0
+  template:
+    metadata:
+      labels:
+        app: devops-control-point
+        version: v1.39.0
+    spec:
+      containers:
+        - name: land-devops-container
+          image: trenchlive/devops_control_point_2:v1.39.0
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 80

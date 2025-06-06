@@ -6,4 +6,4 @@ LABEL org.opencontainers.image.source="$GITHUB_REPO_URL"
 
 RUN echo "Container was built from stub" > /built.txt
 
-CMD ["sh", "-c", "cat /built.txt && echo 'Running stub image v$VERSION'"]
+CMD ["sh", "-c", "echo 'Running stub v$VERSION' && tail -f /dev/null"]
